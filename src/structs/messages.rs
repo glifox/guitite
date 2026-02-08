@@ -1,0 +1,45 @@
+use actix::prelude::{Recipient, Message as msg};
+
+use crate::structs::internal::{Action, MessageType};
+
+pub type Mresult = Option<Result<Message,Error>>;
+
+#[derive(msg, Clone)]
+#[rtype(result = "Option<Result<Message,Error>>")]
+pub struct Message {
+    pub sender_id: u64,
+    pub file: String,
+    pub mtype: MessageType,
+    pub action: Action,
+}
+
+
+#[derive(msg, Clone)]
+#[rtype(result = "()")]
+pub(crate) struct Connect {
+    pub id: u64,
+    pub file: String,
+    pub addr_msg: Recipient<Message>,
+    pub addr_err: Recipient<Error>,
+}
+
+#[derive(msg, Clone)]
+#[rtype(result = "()")]
+pub struct Disconnect {
+    pub id: u64,
+    pub file: String,
+}
+
+#[derive(msg, Clone)]
+#[rtype(result = "()")]
+pub struct Error {
+    pub status: u16,
+    pub message: String,
+    pub fatal: bool,
+}
+
+impl ToString for Error {
+    fn to_string(&self) -> String {
+        format!("{}: {}", self.status, self.message)
+    }
+}
