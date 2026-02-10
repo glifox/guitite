@@ -2,6 +2,9 @@ use std::collections::{HashMap, HashSet};
 use actix::prelude::{Actor, Context, Handler, Recipient};
 use actix::dev::ToEnvelope;
 
+use actix::dev::ContextFutureSpawner;
+use actix::{ActorFutureExt, WrapFuture};
+
 use crate::{errors, unwrap_clients_in_file};
 use crate::structs::actors::relay::Relay;
 use crate::structs::messages::{Disconnect, Error, Message};
@@ -100,28 +103,37 @@ where
         );
     }
     
-    pub(super) async fn respond_version(&self, msg: Message) {
+    pub(super) fn respond_version(&self, msg: Message, ctx: &mut Context<Server<A>>) {
         let (file, _) = unwrap_clients_in_file!(self, msg);
         
         let id = msg.id.clone();
         let is_new = matches!((&msg.action, &msg.mtype),(Action::None, MessageType::None));
-        let response = file.message.send(msg).await;
         
-        match response {
-            Ok(Some(Ok(m))) => {
-                match (&m.mtype, &m.action) {
-                    (MessageType::Export(_), Action::None) |
-                    (MessageType::None, Action::None) if !is_new => self.send(&id, m),
-                    (MessageType::None, Action::None) if is_new => self.send_err(&id, errors!(file_not_found)),
-                    _ => panic!("The response with a version must be type: (Export | None) and action (None)"),
+        file.message.send(msg)
+            .into_actor(self)
+            .then(
+                move |response, server , _| {
+                    log::info!("responded");
+                    
+                    match response {
+                        Ok(Some(Ok(m))) => {
+                            match (&m.mtype, &m.action) {
+                                (MessageType::Export(_), Action::None) |
+                                (MessageType::None, Action::None) if !is_new => server.send(&id, m),
+                                (MessageType::None, Action::None) if is_new => server.send_err(&id, errors!(file_not_found)),
+                                _ => panic!("The response with a version must be type: (Export | None) and action (None)"),
+                            }
+                        },
+                        Ok(Some(Err(e))) => server.send_err(&id, e),
+                        Ok(None) => panic!("The file actor must return the export for the version"),
+                        Err(e) => {
+                            let err = Error { status: 500, message: e.to_string(), fatal: true };
+                            server.send_err(&id, err);
+                        },
+                    }
+                    
+                    actix::fut::ready(())
                 }
-            },
-            Ok(Some(Err(e))) => self.send_err(&id, e),
-            Ok(None) => panic!("The file actor must return the export for the version"),
-            Err(e) => {
-                let err = Error { status: 500, message: e.to_string(), fatal: true };
-                self.send_err(&id, err);
-            },
-        }
+            ).wait(ctx);
     }
 }

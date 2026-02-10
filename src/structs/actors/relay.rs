@@ -1,6 +1,6 @@
 use actix::{Actor, Context, Handler};
 
-use crate::structs::messages::{Disconnect, Message, Mresult};
+use crate::structs::{internal::{Action, MessageType}, messages::{Disconnect, Message, Mresult}};
 
 pub struct Relay(pub String);
 
@@ -10,9 +10,9 @@ impl Handler<Message> for Relay {
     type Result = Mresult;
 
     fn handle(&mut self, msg: Message, _ctx: &mut Self::Context) -> Self::Result {
-        log::info!("Message recived: {:#?}", msg);
+        log::info!("Message recived: {:?}", msg);
         
-        Some(Ok(msg))
+        Some(Ok(Message { id: msg.id, file: msg.file, mtype: MessageType::None, action: Action::None }))
     }
 }
 

@@ -48,21 +48,13 @@ pub enum MessageType {
 }
 
 impl MessageType {
-    pub(crate) fn to_send(&self, action: Action) -> Option<Vec<u8>> {
+    pub(crate) fn encode(&self, action: Action) -> Vec<u8> {
         match self {
-            MessageType::None => None,
-            MessageType::Export(items) => {
-                Some(Self::to_vec(1, action.byte(), items))
-            },
-            MessageType::VersionVector(items) => {
-                Some(Self::to_vec(2, action.byte(), items))
-            },
-            MessageType::Frontiers(items) => {
-                Some(Self::to_vec(3, action.byte(), items))
-            },
-            MessageType::Ephimeral(items) => {
-                Some(Self::to_vec(4, action.byte(), items))
-            },
+            MessageType::None => Self::to_vec(0, action.byte(), &Vec::with_capacity(2)),
+            MessageType::Export(items) => Self::to_vec(1, action.byte(), items),
+            MessageType::VersionVector(items) => Self::to_vec(2, action.byte(), items),
+            MessageType::Frontiers(items) => Self::to_vec(3, action.byte(), items),
+            MessageType::Ephimeral(items) => Self::to_vec(4, action.byte(), items),
         }
     }
     

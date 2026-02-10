@@ -136,13 +136,8 @@ impl Handler<Message> for Client {
     type Result = Mresult;
 
     fn handle(&mut self, msg: Message, ctx: &mut Self::Context) -> Self::Result {
-        let action = msg.action;
-        
-        match msg.mtype.to_send(action) {
-            Some(m) => ctx.binary(m),
-            None => (),
-        };
-        
+        let bin = msg.mtype.encode(msg.action);
+        ctx.binary(bin);
         None
     }
 }

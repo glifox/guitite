@@ -17,7 +17,7 @@ where
 {
     type Result = Mresult;
 
-    fn handle(&mut self, msg: Message, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: Message, ctx: &mut Self::Context) -> Self::Result {
         match (&msg.action, &msg.mtype) {
             ( // 11 - 41 (type - action)
                 Action::Replicate, 
@@ -28,7 +28,7 @@ where
                 Action::Answer, 
                 MessageType::VersionVector(_) |
                 MessageType::None
-            ) =>{ let _ = self.respond_version(msg); },
+            ) =>{ self.respond_version(msg, ctx); },
             (a, m) => self.send_err(&msg.id, errors!( un_implemented a => m ))
         };
         
