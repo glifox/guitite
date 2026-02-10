@@ -1,14 +1,11 @@
-use std::collections::{HashMap, HashSet};
-use actix::{ActorFutureExt, WrapFuture};
-use actix::prelude::{Actor, Context, Handler, Recipient};
-use actix::dev::{ContextFutureSpawner, ToEnvelope};
+use actix::prelude::{Actor, Handler};
+use actix::dev::ToEnvelope;
 
 use super::super::Server;
 
 use crate::errors;
-use crate::structs::actors::relay::Relay;
-use crate::structs::messages::{Connect, Disconnect, Error, Message, Mresult};
-use crate::structs::internal::{Action, File, MessageType};
+use crate::structs::messages::{Disconnect, Message, Mresult};
+use crate::structs::internal::{Action, MessageType};
 
 impl<A> Handler<Message> for Server<A>
 where 

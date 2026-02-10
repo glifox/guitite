@@ -1,13 +1,11 @@
 use std::collections::{HashMap, HashSet};
-use actix::{ActorFutureExt, WrapFuture};
 use actix::prelude::{Actor, Context, Handler, Recipient};
-use actix::dev::{ContextFutureSpawner, ToEnvelope};
+use actix::dev::ToEnvelope;
 
 use crate::{errors, unwrap_clients_in_file};
 use crate::structs::actors::relay::Relay;
-use crate::structs::messages::{Connect, Disconnect, Error, Message, Mresult};
+use crate::structs::messages::{Disconnect, Error, Message};
 use crate::structs::internal::{Action, File, MessageType};
-
 
 pub struct Server<A = Relay>
 where 

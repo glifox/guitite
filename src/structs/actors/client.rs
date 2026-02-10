@@ -104,6 +104,7 @@ impl StreamHandler<Result<WsMessage, ProtocolError>> for Client {
             }
             WsMessage::Text(_) => { todo!() }
             WsMessage::Binary(binary) => {
+                log::info!("Binary: {:?}", binary.to_vec());
                 let (mtype, action) = match binary.to_vec().parse() {
                     Ok(u) => u,
                     Err(e) => { 

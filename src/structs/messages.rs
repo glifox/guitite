@@ -5,7 +5,7 @@ use crate::structs::internal::{Action, MessageType};
 pub type Mresult = Option<Result<Message,Error>>;
 
 #[derive(msg, Clone, Debug)]
-#[rtype(result = "Option<Result<Message,Error>>")]
+#[rtype(result = "Mresult")]
 pub struct Message {
     /// Sender id
     pub id: u64,

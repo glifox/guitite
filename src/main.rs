@@ -1,18 +1,20 @@
 
 use actix::{Actor, Addr};
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Error, web};
+use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, get, web};
 use actix_web_actors::ws;
 use guitite::{Client, Server};
 
 use env_logger;
 
+#[get("/ws/{file_name}")]
 async fn client(
     req: HttpRequest,
     stream: web::Payload,
     srv: web::Data<Addr<Server>>,
+    path: web::Path<String>
 ) -> Result<HttpResponse, Error> {
     log::info!("Opened recived");
-    ws::start( Client::new("file", srv.get_ref().clone()), &req, stream, )
+    ws::start( Client::new(path.as_str(), srv.get_ref().clone()), &req, stream, )
 }
 
 #[actix_web::main]
@@ -26,8 +28,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(server.clone()))
-            .route("/ws", web::get().to(client))
-            
+            .service(client)
     })
     .workers(2)
     .bind(("127.0.0.1", 8080))?
