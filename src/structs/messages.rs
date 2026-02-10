@@ -4,17 +4,18 @@ use crate::structs::internal::{Action, MessageType};
 
 pub type Mresult = Option<Result<Message,Error>>;
 
-#[derive(msg, Clone)]
+#[derive(msg, Clone, Debug)]
 #[rtype(result = "Option<Result<Message,Error>>")]
 pub struct Message {
-    pub sender_id: u64,
+    /// Sender id
+    pub id: u64,
     pub file: String,
     pub mtype: MessageType,
     pub action: Action,
 }
 
 
-#[derive(msg, Clone)]
+#[derive(msg, Clone, Debug)]
 #[rtype(result = "()")]
 pub(crate) struct Connect {
     pub id: u64,
@@ -23,14 +24,14 @@ pub(crate) struct Connect {
     pub addr_err: Recipient<Error>,
 }
 
-#[derive(msg, Clone)]
+#[derive(msg, Clone, Debug)]
 #[rtype(result = "()")]
 pub struct Disconnect {
     pub id: u64,
     pub file: String,
 }
 
-#[derive(msg, Clone)]
+#[derive(msg, Clone, Debug)]
 #[rtype(result = "()")]
 pub struct Error {
     pub status: u16,

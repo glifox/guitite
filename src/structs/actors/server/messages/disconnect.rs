@@ -3,7 +3,7 @@ use actix::{ActorFutureExt, WrapFuture};
 use actix::prelude::{Actor, Context, Handler, Recipient};
 use actix::dev::{ContextFutureSpawner, ToEnvelope};
 
-use crate::errors;
+use crate::{errors, unwrap_clients_in_file};
 use crate::structs::actors::relay::Relay;
 use crate::structs::messages::{Connect, Disconnect, Error, Message, Mresult};
 use crate::structs::internal::{Action, File, MessageType};
@@ -21,20 +21,14 @@ where
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Self::Context) -> Self::Result {
-        match self.files.get_mut(&msg.file) {
-            Some(val) => val.remove(&msg.id),
-            None => unreachable!(),
-        };
-        
-        match self.files.get_key_value(&msg.file) {
-            Some((k, v)) => {
-                if let Some(dis) = &k.disconnect && v.is_empty() {
-                    dis.do_send(Disconnect { id: msg.id, file: msg.file.clone() });
-                }
-            },
-            None => unreachable!(),
-        };
-        
         self.clients.remove(&msg.id);
+        
+        match self.files.get_mut(&msg.file) {
+            Some(v) => v.remove(&msg.id),
+            None => return ,
+        };
+        
+        let (file, clients ) = unwrap_clients_in_file!(self, msg);
+        if clients.is_empty() { file.disconnect.do_send(msg.clone()); }
     }
 }

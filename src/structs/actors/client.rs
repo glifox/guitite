@@ -17,18 +17,18 @@ const DURATIONS: Durations = Durations {
 };
 
 pub struct Client {
-    id: u64,
-    last_hb: Instant,
-    file_name: String,
-    server: Addr<Server>,
+    pub(super) id: u64,
+    pub(super) last_hb: Instant,
+    pub(super) file_name: String,
+    pub(super) server: Addr<Server>,
 }
 
 impl Client {
-    pub fn new<T: Into<String>>(file: T, orchestrator: Addr<Server>) -> Self {
+    pub fn new<T: Into<String>>(file: T, server: Addr<Server>) -> Self {
         Self { 
             id: rand::rng().random(), 
             last_hb: Instant::now(),
-            server: orchestrator, 
+            server, 
             file_name: file.into() 
         }
     }
@@ -113,7 +113,7 @@ impl StreamHandler<Result<WsMessage, ProtocolError>> for Client {
                 };
                 
                 let con = Message {
-                    sender_id: self.id,
+                    id: self.id,
                     file: self.file_name.clone(),
                     mtype,
                     action

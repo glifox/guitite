@@ -5,7 +5,7 @@ use actix::prelude::Recipient;
 
 use crate::structs::messages::{Disconnect, Message};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Action {
     None,
     Replicate,
@@ -38,7 +38,7 @@ impl Display for Action {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum MessageType {
     None,
     Export(Vec<u8>),

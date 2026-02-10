@@ -17,9 +17,9 @@ where
     A::Context: ToEnvelope<A, Message>,
     A::Context: ToEnvelope<A, Disconnect>
 {
-    pub actor: fn(String) -> A,
-    pub files: HashMap<File, HashSet<u64>>,
-    pub clients: HashMap<u64, (Recipient<Message>, Recipient<Error>)>,
+    pub(in super) actor: fn(String) -> A,
+    pub(in super) files: HashMap<File, HashSet<u64>>,
+    pub(in super) clients: HashMap<u64, (Recipient<Message>, Recipient<Error>)>,
 }
 
 
@@ -34,7 +34,7 @@ where
 
 impl Server {
     #[allow(unused)]
-    fn none(_: String) -> Relay { Relay }
+    fn none(name: String) -> Relay { Relay(name) }
     
     pub fn new() -> Server {
         Server { 
@@ -87,7 +87,7 @@ where
         let (file, clients) = unwrap_clients_in_file!(self, msg => ());
         
         let message = Message {
-            sender_id: 0,
+            id: 0,
             file: file.name.clone(),
             mtype: msg.mtype,
             action: Action::None,
@@ -96,9 +96,34 @@ where
         file.message.do_send(message.clone());
         clients.iter().for_each(
             |cl| {
-                if *cl == msg.sender_id { return }
+                if *cl == msg.id { return }
                 self.send(cl, message.clone());
             }
         );
+    }
+    
+    pub(super) async fn respond_version(&self, msg: Message) {
+        let (file, _) = unwrap_clients_in_file!(self, msg);
+        
+        let id = msg.id.clone();
+        let is_new = matches!((&msg.action, &msg.mtype),(Action::None, MessageType::None));
+        let response = file.message.send(msg).await;
+        
+        match response {
+            Ok(Some(Ok(m))) => {
+                match (&m.mtype, &m.action) {
+                    (MessageType::Export(_), Action::None) |
+                    (MessageType::None, Action::None) if !is_new => self.send(&id, m),
+                    (MessageType::None, Action::None) if is_new => self.send_err(&id, errors!(file_not_found)),
+                    _ => panic!("The response with a version must be type: (Export | None) and action (None)"),
+                }
+            },
+            Ok(Some(Err(e))) => self.send_err(&id, e),
+            Ok(None) => panic!("The file actor must return the export for the version"),
+            Err(e) => {
+                let err = Error { status: 500, message: e.to_string(), fatal: true };
+                self.send_err(&id, err);
+            },
+        }
     }
 }
