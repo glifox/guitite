@@ -10,7 +10,7 @@ pub enum Action {
     None,
     Replicate,
     Answer,
-    Passthrough
+    Passthrough,
 }
 
 impl Action {
@@ -103,3 +103,4 @@ impl Borrow<str> for File {
 impl Borrow<String> for File {
     fn borrow(&self) -> &String { &self.name }
 }
+

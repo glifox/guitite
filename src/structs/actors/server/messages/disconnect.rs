@@ -2,15 +2,17 @@ use actix::prelude::{Actor, Handler};
 use actix::dev::ToEnvelope;
 
 use crate::unwrap_clients_in_file;
-use crate::structs::messages::{Disconnect, Message};
+use crate::structs::messages::{Connect, Disconnect, Message};
 
 use super::super::Server;
 
 impl<A> Handler<Disconnect> for Server<A>
 where 
     A: Actor<Context = actix::Context<A>>,
+    A: Handler<Connect>,
     A: Handler<Message>,
     A: Handler<Disconnect>,
+    A::Context: ToEnvelope<A, Connect>,
     A::Context: ToEnvelope<A, Message>,
     A::Context: ToEnvelope<A, Disconnect>,
 {

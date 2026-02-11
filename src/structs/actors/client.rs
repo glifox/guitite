@@ -7,7 +7,7 @@ use rand::Rng as _;
 
 use super::super::parser::Parse;
 use crate::structs::actors::server::Server;
-use crate::structs::messages::{Connect, Disconnect, Error, Message, Mresult};
+use crate::structs::messages::{Connect, Disconnect, Error, Message};
 
 
 struct Durations { heardbeat: Duration, timeout: Duration }
@@ -104,7 +104,6 @@ impl StreamHandler<Result<WsMessage, ProtocolError>> for Client {
             }
             WsMessage::Text(_) => { todo!() }
             WsMessage::Binary(binary) => {
-                log::info!("Binary: {:?}", binary.to_vec());
                 let (mtype, action) = match binary.to_vec().parse() {
                     Ok(u) => u,
                     Err(e) => { 
@@ -133,12 +132,11 @@ impl StreamHandler<Result<WsMessage, ProtocolError>> for Client {
 }
 
 impl Handler<Message> for Client {
-    type Result = Mresult;
+    type Result = ();
 
     fn handle(&mut self, msg: Message, ctx: &mut Self::Context) -> Self::Result {
         let bin = msg.mtype.encode(msg.action);
         ctx.binary(bin);
-        None
     }
 }
 

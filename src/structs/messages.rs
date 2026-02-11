@@ -2,10 +2,14 @@ use actix::prelude::{Recipient, Message as msg};
 
 use crate::structs::internal::{Action, MessageType};
 
-pub type Mresult = Option<Result<Message,Error>>;
+#[derive(Clone, Debug)]
+pub enum Target {
+    All(String),
+    Client(u64)
+}
 
 #[derive(msg, Clone, Debug)]
-#[rtype(result = "Mresult")]
+#[rtype(result = "()")]
 pub struct Message {
     /// Sender id
     pub id: u64,
@@ -14,10 +18,16 @@ pub struct Message {
     pub action: Action,
 }
 
+#[derive(msg, Clone, Debug)]
+#[rtype(result = "()")]
+pub struct Response {
+    pub target: Target,
+    pub response: Result<Message, Error>
+}
 
 #[derive(msg, Clone, Debug)]
 #[rtype(result = "()")]
-pub(crate) struct Connect {
+pub struct Connect {
     pub id: u64,
     pub file: String,
     pub addr_msg: Recipient<Message>,
