@@ -21,14 +21,23 @@ where
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Self::Context) -> Self::Result {
-        self.clients.remove(&msg.id);
+        log::debug!("disconect recived: {} on {}", msg.id, msg.file);
+        match self.clients.remove(&msg.id){
+            Some(_) => (),
+            None => log::error!("can not remove client"),
+        };
         
         match self.files.get_mut(&msg.file) {
             Some(v) => v.remove(&msg.id),
-            None => return ,
+            None => {log::error!("Unexpencted emptyness"); false},
         };
         
         let (file, clients ) = unwrap_clients_in_file!(self, msg);
-        if clients.is_empty() { file.disconnect.do_send(msg.clone()); }
+        if clients.is_empty() { 
+            file.disconnect.do_send(msg.clone());
+            self.files.remove(&msg.file);
+        };
+        
+        log::debug!("state: \nfiles: {:#?}\nclients: {:#?}", self.files, self.clients);
     }
 }

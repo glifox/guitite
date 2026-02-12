@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 use actix::prelude::Recipient;
 
-use crate::structs::messages::{Disconnect, Message};
+use crate::structs::messages::{Connect, Disconnect, Message};
 
 #[derive(Clone, Debug)]
 pub enum Action {
@@ -81,9 +81,10 @@ impl Display for MessageType {
     }
 }
 
-#[derive(Eq)]
+#[derive(Eq, Debug)]
 pub struct File {
     pub name: String,
+    pub connect: Recipient<Connect>,
     pub message: Recipient<Message>,
     pub disconnect: Recipient<Disconnect>,
 }

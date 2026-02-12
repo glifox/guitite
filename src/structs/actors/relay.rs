@@ -15,6 +15,7 @@ pub struct Relay {
 
 impl Relay {
     pub(crate) fn new(name: String, server: Recipient<Response>) -> Self {
+        log::debug!("Creating new");
         Self { name, doc: LoroDoc::new(), server}
     }
     
@@ -57,7 +58,7 @@ impl Handler<Disconnect> for Relay {
 
     fn handle(&mut self, msg: Disconnect, ctx: &mut Self::Context) -> Self::Result {
         log::info!("Close message recived {:?}", msg);
-        log::info!("Doc text state: {:?}", self.doc.get_text("text").to_string());
+        log::info!("Doc text state: {:?}", self.doc.get_text("codemirror").to_string());
         ctx.stop();
     }
 }

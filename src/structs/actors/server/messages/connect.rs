@@ -23,28 +23,31 @@ where
 {
     type Result = ();
 
-    fn handle(&mut self, msg: Connect, ctx: &mut Self::Context) -> Self::Result {
-        let inbox: Recipient<Response> = ctx.address().recipient();
-        let actor = (self.actor)(msg.file.clone(), inbox).start();
-        
-        let file = File { 
-            name: msg.file.clone(),
-            message: actor.clone().recipient(), 
-            disconnect: actor.clone().recipient() 
-        };
-        
-        let connect: Recipient<Connect> = actor.recipient();
-        connect.do_send(msg.clone());
-        
-        self.clients.insert(msg.id, (msg.addr_msg, msg.addr_err));
+    fn handle(&mut self, msg: Connect, ctx: &mut Self::Context) -> Self::Result {        
+        self.clients.insert(msg.id, (msg.addr_msg.clone(), msg.addr_err.clone()));
         
         match self.files.get_mut(&msg.file) {
-            Some(val) =>{ val.insert(msg.id); },
+            Some(val) =>{ 
+                val.insert(msg.id);
+            },
             None => { 
+                let inbox: Recipient<Response> = ctx.address().recipient();
+                let actor = (self.actor)(msg.file.clone(), inbox).start();
+                
+                let file = File { 
+                    name: msg.file.clone(),
+                    connect: actor.clone().recipient(),
+                    message: actor.clone().recipient(), 
+                    disconnect: actor.clone().recipient() 
+                };
+                
                 let mut set = HashSet::new();
                 set.insert(msg.id);
-                self.files.insert(file, set); 
+                self.files.insert(file, set);
             },
         };
+        
+        let (f, _) = self.files.get_key_value(&msg.file).expect("unexpected behaviour");
+        f.connect.do_send(msg);
     }
 }

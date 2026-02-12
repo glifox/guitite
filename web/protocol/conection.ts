@@ -23,13 +23,13 @@ export class Conection {
     this.doc = doc;
     this.url = url;
     this.protocols = protocols;
-    this.tryopen = true;
     
-    this.connect();
+    // this.tryconnect();
   }
 
   private connect() {
     this.ws = new WebSocket(this.url, this.protocols);
+    this.tryopen = false;
 
     this.ws.onopen = this.onopen.bind(this);
     this.ws.onmessage = this.onmessage.bind(this);
@@ -46,7 +46,6 @@ export class Conection {
     
     const version = this.doc.oplogVersion().encode();
     const message = new Message(MessageType.VersionVector, Action.Answer, version);
-    // const message = new Message(MessageType.VersionVector, Action.Passthrough, version);
     
     this.send(message);
   }
@@ -59,7 +58,7 @@ export class Conection {
       this.proccess(new Uint8Array(arrayBuffer));
     }
     else if (typeof data === 'string') this.error(data);
-    else console.warn("[>]", ev.data);
+    else console.warn("[!] data", ev.data);
   }
 
   private onclose(ev: CloseEvent) {
@@ -95,8 +94,14 @@ export class Conection {
   
   private send(message: Message) {
     const stream = message.encode();
-    console.debug("[send] ", stream);
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(stream);
+    
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.debug("[send] ", stream);
+      this.ws.send(stream);
+    }
+    else {
+      console.debug("[dico] ", stream);
+    }
   }
   
   private proccess(bytes: Uint8Array) {
@@ -106,7 +111,7 @@ export class Conection {
     
     if (protocol[combination]) {
       let response = protocol[combination](this.doc, message.content)
-      if (response) this.send(message);
+      if (response) this.send(response);
     }
     else this.error(`Unsupported combination: '${combination}'`)
   }
@@ -115,7 +120,7 @@ export class Conection {
     console.error("error: ", data)
   }
   
-  try_connect() {
+  tryconnect() {
     this.tryopen = true;
     this.connect();
   }
