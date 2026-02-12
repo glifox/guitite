@@ -10,7 +10,7 @@ pub enum Action {
     None,
     Replicate,
     Answer,
-    Passthrough,
+    // Passthrough,
 }
 
 impl Action {
@@ -19,7 +19,7 @@ impl Action {
             Action::None => 0,
             Action::Replicate => 1,
             Action::Answer => 2,
-            Action::Passthrough => 3,
+            // Action::Passthrough => 3,
         }
     }
 }
@@ -31,7 +31,7 @@ impl Display for Action {
             Action::None => write!(f, "None"),
             Action::Replicate => write!(f, "Replicate"),
             Action::Answer => write!(f, "Answer"),
-            Action::Passthrough => write!(f, "Passthrough"),
+            // Action::Passthrough => write!(f, "Passthrough"),
         }?;
         
         write!(f, " ({})", self.byte())

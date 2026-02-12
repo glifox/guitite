@@ -3,7 +3,7 @@ export enum Action {
   None = 0,
   Replicate = 1,
   Answer = 2,
-  Passthrough = 3,
+  // Passthrough = 3,
 }
 
 export enum MessageType {
@@ -13,6 +13,8 @@ export enum MessageType {
   Frontiers = 3,
   Ephimeral = 4,
 }
+
+export type Combination = `${MessageType}-${Action}`;
 
 export class Message {
   readonly mtype: MessageType
@@ -29,5 +31,9 @@ export class Message {
   
   encode(): Uint8Array {
     return Uint8Array.from([this.mtype.valueOf(), this.action.valueOf(), ...this.content])
+  }
+  
+  to_combination(): Combination {
+    return `${this.mtype}-${this.action}` as Combination;
   }
 }

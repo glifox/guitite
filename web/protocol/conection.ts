@@ -1,5 +1,5 @@
 import { LoroDoc } from "loro-crdt";
-import { Action, Message, MessageType } from "./types";
+import { Action, Combination, Message, MessageType } from "./types";
 
 export class Conection {
   private doc: LoroDoc;
@@ -101,21 +101,13 @@ export class Conection {
   private proccess(bytes: Uint8Array) {
     console.debug("[get ] ", bytes);
     let message = Message.from(bytes);
+    let combination: Combination = message.to_combination();
     
-    switch (message.mtype, message.action) {
-      case (MessageType.None, Action.Answer):
-        const update = this.doc.export({ mode: "update" });
-        const response = new Message(MessageType.Export, Action.None, update);
-        this.send(response);
-        break;
-      case (MessageType.Export, Action.None):
-        const status = this.doc.import(message.content);
-        if (status.pending) {
-          this.send(new Message(MessageType.VersionVector, Action.Answer, this.doc.version().encode()))
-        }
-        return;
-      default: this.error(`Unsupported message`)
+    if (actions[combination]) {
+      let response = actions[combination](this.doc, message.content)
+      if (response) this.send(message);
     }
+    else this.error(`Unsupported combination: '${combination}'`)
   }
   
   private error(data: String) {
@@ -137,4 +129,19 @@ export class Conection {
     
     this.ws = null;
   }
+}
+
+const actions: { [key in Combination]?: (doc: LoroDoc, content: Uint8Array) => Message | undefined } = {
+  [`${MessageType.None}-${Action.Answer}`]: (doc, _) => {
+    const update = doc.export({ mode: "update" });
+    return new Message(MessageType.Export, Action.None, update);
+  },
+  
+  [`${MessageType.Export}-${Action.None}`]: (doc, content) => {
+    const status = doc.import(content);
+    if (status.pending) {
+      return new Message(MessageType.VersionVector, Action.Answer, doc.version().encode())
+    }
+  }
+  
 }

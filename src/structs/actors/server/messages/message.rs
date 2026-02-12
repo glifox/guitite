@@ -3,9 +3,9 @@ use actix::dev::ToEnvelope;
 
 use super::super::Server;
 
-use crate::{errors, unwrap_clients_in_file};
+use crate::unwrap_clients_in_file;
 use crate::structs::messages::{Connect, Disconnect, Message};
-use crate::structs::internal::{Action, MessageType};
+use crate::structs::internal::{Action};
 
 impl<A> Handler<Message> for Server<A>
 where 
@@ -23,16 +23,8 @@ where
         let (file, _) = unwrap_clients_in_file!(self, msg);
         
         match (&msg.action, &msg.mtype) {
-            ( //(type - action)
-                Action::Replicate, 
-                MessageType::Export(_) | 
-                MessageType::Ephimeral(_)
-            ) => self.replicate(msg),
-            ( Action::Answer, MessageType::VersionVector(_) ) |
-            ( Action::Answer, MessageType::None ) |
-            ( Action::None, MessageType::Export(_) ) 
-            => file.message.do_send(msg),
-            (a, m) => self.send_err(&msg.id, errors!( un_implemented a => m ))
+            ( Action::Replicate, _ ) => self.replicate(msg),
+            ( Action::Answer | Action::None, _) => file.message.do_send(msg),
         }
     }
 }
