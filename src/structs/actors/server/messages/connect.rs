@@ -7,11 +7,13 @@ use super::super::Server;
 
 use crate::structs::messages::{Connect, Disconnect, Message, Response};
 use crate::structs::internal::File;
+use crate::structs::protocol::Protocol;
 
 
 impl<A> Handler<Connect> for Server<A>
 where 
     A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
     A: Handler<Connect>,
     A: Handler<Message>,
     A: Handler<Disconnect>,

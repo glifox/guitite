@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use actix::prelude::{Actor, Context, Handler, Recipient};
 use actix::dev::ToEnvelope;
 
+use crate::structs::protocol::Protocol;
 use crate::{errors, unwrap_clients_in_file};
 use crate::structs::actors::relay::Relay;
 use crate::structs::messages::{Connect, Disconnect, Error, Message, Response};
@@ -10,6 +11,7 @@ use crate::structs::internal::{Action, File};
 pub struct Server<A = Relay>
 where 
     A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
     A: Handler<Connect>,
     A: Handler<Message>,
     A: Handler<Disconnect>,
@@ -26,6 +28,7 @@ where
 impl<A> Actor for Server<A> 
 where
     A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
     A: Handler<Connect>,
     A: Handler<Message>,
     A: Handler<Disconnect>,
@@ -50,6 +53,7 @@ impl Server {
 impl<A> Server<A>
 where
     A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
     A: Handler<Connect>,
     A: Handler<Message>,
     A: Handler<Disconnect>,

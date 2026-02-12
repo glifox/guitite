@@ -3,6 +3,7 @@ use actix::dev::ToEnvelope;
 
 use super::super::Server;
 
+use crate::structs::protocol::Protocol;
 use crate::{message, unwrap_clients_in_file};
 use crate::structs::messages::{Connect, Disconnect, Message};
 use crate::structs::internal::{Action};
@@ -10,6 +11,7 @@ use crate::structs::internal::{Action};
 impl<A> Handler<Message> for Server<A>
 where 
     A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
     A: Handler<Connect>,
     A: Handler<Message>,
     A: Handler<Disconnect>,

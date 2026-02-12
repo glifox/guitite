@@ -6,11 +6,13 @@ use actix::dev::ToEnvelope;
 use super::super::Server;
 
 use crate::structs::messages::{Connect, Disconnect, Message, Response, Target};
+use crate::structs::protocol::Protocol;
 
 
 impl<A> Handler<Response> for Server<A>
 where 
     A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
     A: Handler<Connect>,
     A: Handler<Message>,
     A: Handler<Disconnect>,
