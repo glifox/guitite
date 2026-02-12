@@ -3,7 +3,7 @@ use actix::dev::ToEnvelope;
 
 use super::super::Server;
 
-use crate::unwrap_clients_in_file;
+use crate::{message, unwrap_clients_in_file};
 use crate::structs::messages::{Connect, Disconnect, Message};
 use crate::structs::internal::{Action};
 
@@ -20,11 +20,16 @@ where
     type Result = ();
 
     fn handle(&mut self, msg: Message, _: &mut Self::Context) -> Self::Result {
-        let (file, _) = unwrap_clients_in_file!(self, msg);
+        let (file, clients) = unwrap_clients_in_file!(self, msg);
         
         match (&msg.action, &msg.mtype) {
             ( Action::Replicate, _ ) => self.replicate(msg),
             ( Action::Answer | Action::None, _) => file.message.do_send(msg),
+            ( Action::Passthrough, _ ) => {
+                clients.iter().for_each(|c| { 
+                    self.send(c, message!(copy msg, act Action::None)) 
+                });
+            }
         }
     }
 }

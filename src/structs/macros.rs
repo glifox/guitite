@@ -52,9 +52,12 @@ macro_rules! unwrap_clients_in_file {
     ($self:expr, $msg:expr) =>{ unwrap_clients_in_file!($self, $msg => () ) };
 }
 
+/// `copy msg, mtype, action`
+/// `copy msg, action`
 #[macro_export]
 macro_rules! message {
     (copy $msg:expr, $type:expr, $action:expr) => {
         crate::structs::messages::Message { id: $msg.id.clone(), file: $msg.file.clone(), mtype: $type, action: $action }
     };
+    (copy $msg:expr, act $action:expr) => { message!(copy $msg, $msg.mtype.clone(), $action) };
 }

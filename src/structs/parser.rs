@@ -21,7 +21,7 @@ impl Parser for Action {
             0 => Ok(Action::None),
             1 => Ok(Action::Replicate),
             2 => Ok(Action::Answer),
-            // 3 => Ok(Action::Passthrough),
+            3 => Ok(Action::Passthrough),
             _ => Err("Invalid Action")
         }
     }
