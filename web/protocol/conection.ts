@@ -28,7 +28,7 @@ export class Conection {
     this.connect();
   }
 
-  connect() {
+  private connect() {
     this.ws = new WebSocket(this.url, this.protocols);
 
     this.ws.onopen = this.onopen.bind(this);
@@ -113,6 +113,11 @@ export class Conection {
   
   private error(data: String) {
     console.error("error: ", data)
+  }
+  
+  try_connect() {
+    this.tryopen = true;
+    this.connect();
   }
   
   close() {
