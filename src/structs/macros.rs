@@ -60,4 +60,5 @@ macro_rules! message {
         crate::structs::messages::Message { id: $msg.id.clone(), file: $msg.file.clone(), mtype: $type, action: $action }
     };
     (copy $msg:expr, act $action:expr) => { message!(copy $msg, $msg.mtype.clone(), $action) };
+    (copy $msg:expr, mt $type:expr) => { message!(copy $msg, $type, $msg.action.clone()) };
 }
