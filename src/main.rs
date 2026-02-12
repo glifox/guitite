@@ -13,7 +13,7 @@ async fn client(
     srv: web::Data<Addr<Server>>,
     path: web::Path<String>
 ) -> Result<HttpResponse, Error> {
-    log::info!("Opened recived");
+    log::info!("Try open {path}");
     ws::start( Client::new(path.as_str(), srv.get_ref().clone()), &req, stream, )
 }
 

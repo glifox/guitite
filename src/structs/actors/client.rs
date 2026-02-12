@@ -122,6 +122,7 @@ impl StreamHandler<Result<WsMessage, ProtocolError>> for Client {
                 self.server.do_send(con);
             },
             WsMessage::Close(reason) => {
+                log::info!("close: {:?}", reason);
                 ctx.close(reason);
                 ctx.stop();
             }

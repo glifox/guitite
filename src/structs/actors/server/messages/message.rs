@@ -23,16 +23,15 @@ where
         let (file, _) = unwrap_clients_in_file!(self, msg);
         
         match (&msg.action, &msg.mtype) {
-            ( // 11 - 41 (type - action)
+            ( //(type - action)
                 Action::Replicate, 
                 MessageType::Export(_) | 
                 MessageType::Ephimeral(_)
             ) => self.replicate(msg),
-            (
-                Action::Answer, 
-                MessageType::VersionVector(_) |
-                MessageType::None
-            ) => file.message.do_send(msg),
+            ( Action::Answer, MessageType::VersionVector(_) ) |
+            ( Action::Answer, MessageType::None ) |
+            ( Action::None, MessageType::Export(_) ) 
+            => file.message.do_send(msg),
             (a, m) => self.send_err(&msg.id, errors!( un_implemented a => m ))
         }
     }

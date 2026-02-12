@@ -1,3 +1,7 @@
+#[macro_export]
+macro_rules! error {
+    ($expr:expr) => { log::error!("{:?} in [{}]", $expr, format!("{}:{}:{}", file!(), line!(), column!())) };
+}
 
 /// - `invalid` -> Invalid
 /// - `no_clients` -> No more clients connect
@@ -6,11 +10,31 @@
 /// - `file_not_found $key` -> __!fatal!__ The server can not found the file: $key
 #[macro_export]
 macro_rules! errors {
-    (invalid) => { crate::structs::messages::Error { status: 404, message: "Invalid".to_string(), fatal: false } };
-    (no_clients) => { crate::structs::messages::Error { status: 404, message: "No more clients connect".to_string(), fatal: false } };
-    (un_implemented $action:expr => $mtype:expr) => { crate::structs::messages::Error { status: 404, message: format!("Combination un implemented {}: {}", $action, $mtype), fatal: false } };
-    (file_not_found) => { crate::structs::messages::Error { status: 500, message: format!("The server can not found the file any version of the file (You might create one first)."), fatal: true } };
-    (file_not_found $key:expr) => { crate::structs::messages::Error { status: 500, message: format!("The server can not found the file: {}", $key), fatal: true } };
+    (invalid) => {{
+        let error = crate::structs::messages::Error { status: 404, message: "Invalid".to_string(), fatal: false };
+        crate::error!(error);
+        error
+    }};
+    (no_clients) => {{
+        let error = crate::structs::messages::Error { status: 404, message: "No more clients connect".to_string(), fatal: false };
+        error!(error);
+        error
+    }};
+    (un_implemented $action:expr => $mtype:expr) => {{
+        let error = crate::structs::messages::Error { status: 404, message: format!("Combination un implemented {}: {}", $action, $mtype), fatal: false };
+        crate::error!(error);
+        error
+    }};
+    (file_not_found) => {{ 
+        let error = crate::structs::messages::Error { status: 500, message: format!("The server can not found the file any version of the file (You might create one first)."), fatal: true };
+        crate::error!(error);
+        error
+    }};
+    (file_not_found $key:expr) => {{
+        let error = crate::structs::messages::Error { status: 500, message: format!("The server can not found the file: {}", $key), fatal: true } ;
+        crate::error!(error);
+        error
+    }};
 }
 
 /// self, msg => return

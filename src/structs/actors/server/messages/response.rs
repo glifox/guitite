@@ -30,7 +30,7 @@ where
             },
             Target::Client(client) => &HashSet::from([*client]),
         }; 
-        
+        log::debug!("Response: [{:?}]", msg);
         match msg.response {
             Ok(m) => {
                 target.iter().for_each(|c| {

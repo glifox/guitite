@@ -55,8 +55,8 @@ impl Parse for Vec<u8> {
         };
         
         let vec: Vec<u8> = (self[2..]).to_vec();
-        let action = Action::parse(&arr[0])?;
-        let message = MessageType::parse(&(arr[1], vec))?;
+        let action = Action::parse(&arr[1])?;
+        let message = MessageType::parse(&(arr[0], vec))?;
         
         Ok((message, action))
     }
