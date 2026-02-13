@@ -16,16 +16,9 @@ pub trait Protocol {
     fn process(&self, doc: &LoroDoc, message: Message) -> Result<Option<Message>, Error> {        
         match (&message.mtype, &message.action) {
             (MessageType::VersionVector(vv), Action::Answer) => {
-                log::debug!("current version {:?}", doc.oplog_vv());
-                let update: Vec<u8>;
-                if &vv[..] == &[0u8] {
-                    update = doc.export(ExportMode::all_updates()).map_err(|e| e.to_error())?;
-                } 
-                else {
-                    let version: VersionVector = VersionVector::decode(vv).map_err(|e| e.to_error())?;
-                    let version = Cow::Borrowed(&version);
-                    update = doc.export(ExportMode::Updates { from: version }).map_err(|e| e.to_error())?;
-                }
+                let version: VersionVector = VersionVector::decode(vv).map_err(|e| e.to_error())?;
+                let version = Cow::Borrowed(&version);
+                let update = doc.export(ExportMode::Updates { from: version }).map_err(|e| e.to_error())?;
                 Ok(Some(message!(copy message, MessageType::Export(update), Action::None)))
             }
             (MessageType::Export(bytes), Action::None) => {
