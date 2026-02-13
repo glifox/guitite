@@ -6,7 +6,8 @@
   "terminal": {
     "env": {
       // "RUST_LOG": "info",
-      "RUST_LOG": "debug",
+      "RUST_LOG": "guitite=debug",
+      // "RUST_LOG": "debug",
     }
   }
 }

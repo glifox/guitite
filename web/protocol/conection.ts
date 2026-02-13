@@ -69,15 +69,24 @@ export class Conection {
     
     this.ws = null;
     
-    console.warn(`[Connection closed] Code: ${ev.code}, Reason: ${ev.reason}`);
-    if (ev.code === 4000) return;
-    if (ev.reason === "Failed to connect") return;
-    this.retry(); 
+    switch (ev.code) {
+      case 1001:
+      case 1002:
+      case 1003:
+      case 1006:
+        this.retry();
+        break;
+      case 3000:
+        this.tryopen = false;
+        break;
+      default:
+        console.warn(`[Connection closed] Code: ${ev.code}, Reason: ${ev.reason}`);
+    } 
   }
   private onerror(ev: Event) {
     console.warn("error: ", ev);
     this.ws = null; 
-    this.retry()
+    // this.retry()
   }
 
   private retry() {
@@ -133,7 +142,7 @@ export class Conection {
     }
     
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      this.ws.close(4000, "Self killed");
+      this.ws.close(3000, "Self killed");
     }
     
     else if (this.ws) console.warn(`Attempted to close WebSocket, but it was in state: ${this.ws.readyState}.`);
