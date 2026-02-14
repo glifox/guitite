@@ -1,3 +1,5 @@
+pub use guitite_derive::Protocol;
+
 use std::borrow::Cow;
 use loro::{ExportMode, LoroDoc, VersionVector};
 
