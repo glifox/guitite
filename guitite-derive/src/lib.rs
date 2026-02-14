@@ -8,6 +8,7 @@ use syn::DeriveInput;
 use crate::utils::attributes::Skips;
 use crate::utils::cheks::check_fields;
 use crate::utils::impl_connect;
+use crate::utils::impl_disconnect;
 use crate::utils::impl_message;
 
 
@@ -21,6 +22,7 @@ fn implementation(tree: DeriveInput, skips: Skips) -> TokenStream {
     
     let connect_impl = if skips.connect { quote! {  } } else { impl_connect::tokens(&name, generics) };
     let message_impl = if skips.message { quote! {  } } else { impl_message::tokens(&name, generics) };
+    let disconn_impl = if skips.disconnect { quote! {  } } else { impl_disconnect::tokens(&name, generics) };
     
     quote! {
         #[allow(dead_code)]
@@ -41,6 +43,7 @@ fn implementation(tree: DeriveInput, skips: Skips) -> TokenStream {
         
         #connect_impl
         #message_impl
+        #disconn_impl
     }.into()
 }
 

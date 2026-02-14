@@ -20,7 +20,7 @@ mod structs;
 pub use structs::actors::server::Server;
 pub use structs::actors::client::Client;
 pub use structs::protocol::Protocol;
-pub use structs::document_actor::DocumentActor;
+pub use guitite_derive::DocumentActor;
 
 #[allow(unused_imports)]
 pub use structs::macros::*;
