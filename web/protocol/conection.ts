@@ -1,9 +1,10 @@
-import { LoroDoc } from "loro-crdt";
+import { EphemeralStore, LoroDoc } from "loro-crdt";
 import { Action, Combination, Message, MessageType } from "./types";
-import { protocol } from "./protocol";
+import { ephimeral_protocol as ephemeral_protocol, protocol } from "./protocol";
 
 export class Conection {
   private doc: LoroDoc;
+  private ephimeral: EphemeralStore | null = null;
   private ws: WebSocket | null = null;
   
   private retries: number = 0;
@@ -14,17 +15,18 @@ export class Conection {
   private tryopen: boolean = true;
   
   private unsubscribe: (() => void) | null = null;
+  private eunsubscribe: (() => void) | null = null;
 
   constructor(
-    doc: LoroDoc,
     url: string | URL,
+    doc: LoroDoc,
+    ephimeral?: EphemeralStore,
     protocols?: string | string[] | undefined,
   ) {
     this.doc = doc;
     this.url = url;
+    if (ephimeral) this.ephimeral = ephimeral;
     this.protocols = protocols;
-    
-    // this.tryconnect();
   }
 
   private connect() {
@@ -39,6 +41,12 @@ export class Conection {
     this.unsubscribe = this.doc.subscribeLocalUpdates(
       (m) => this.send(new Message(MessageType.Export, Action.Replicate, m))
     )
+    
+    if (this.ephimeral) {
+      this.eunsubscribe = this.ephimeral?.subscribeLocalUpdates(
+        (u) => { this.send(new Message(MessageType.Ephimeral, Action.Passthrough, u)) }
+      )
+    }
   }
 
   private onopen(ev: Event) {
@@ -48,6 +56,9 @@ export class Conection {
     const message = new Message(MessageType.VersionVector, Action.Answer, version);
     
     this.send(message);
+    if (this.ephimeral) {
+      this.send(new Message(MessageType.Ephimeral, Action.Passthrough, new Uint8Array()))
+    }
   }
 
   private async onmessage(ev: MessageEvent) {
@@ -67,6 +78,11 @@ export class Conection {
       this.unsubscribe = null;
     }
     
+    if (this.eunsubscribe) {
+      this.eunsubscribe();
+      this.eunsubscribe = null;
+    }
+    
     this.ws = null;
     
     switch (ev.code) {
@@ -80,13 +96,13 @@ export class Conection {
         this.tryopen = false;
         break;
       default:
+        this.tryopen = false;
         console.warn(`[Connection closed] Code: ${ev.code}, Reason: ${ev.reason}`);
     } 
   }
   private onerror(ev: Event) {
-    console.warn("error: ", ev);
-    this.ws = null; 
-    // this.retry()
+    console.error("error: ", ev);
+    this.ws = null;
   }
 
   private retry() {
@@ -122,6 +138,10 @@ export class Conection {
       let response = protocol[combination](this.doc, message.content)
       if (response) this.send(response);
     }
+    else if (ephemeral_protocol[combination] && this.ephimeral) {
+      let response = ephemeral_protocol[combination](this.ephimeral, message.content)
+      if (response) this.send(response);
+    }
     else this.error(`Unsupported combination: '${combination}'`)
   }
   
@@ -139,6 +159,11 @@ export class Conection {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
+    }
+    
+    if (this.eunsubscribe) {
+      this.eunsubscribe();
+      this.eunsubscribe = null;
     }
     
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {

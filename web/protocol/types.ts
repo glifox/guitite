@@ -3,7 +3,7 @@ export enum Action {
   None = 0,
   Replicate = 1,
   Answer = 2,
-  // Passthrough = 3,
+  Passthrough = 3,
 }
 
 export enum MessageType {

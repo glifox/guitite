@@ -5,12 +5,12 @@ import { EphemeralStore, LoroDoc, UndoManager } from "loro-crdt";
 import { Conection } from "./protocol/conection";
 
 const doc = new LoroDoc();
-const con = new Conection(doc, "ws://localhost:8080/ws/some");
+const ephemeral = new EphemeralStore();
+const con = new Conection("ws://localhost:8080/ws/some", doc, ephemeral);
 
 document.querySelector("#cn")!.addEventListener('click', () => con.tryconnect());
 document.querySelector("#dc")!.addEventListener('click', () => con.close());
 
-const ephemeral = new EphemeralStore();
 const undoManager = new UndoManager(doc, {});
 
 new EditorView({
