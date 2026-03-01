@@ -1,8 +1,12 @@
 import { EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { dropCursor, EditorView } from "@codemirror/view";
 import { LoroExtensions } from "loro-codemirror";
 import { EphemeralStore, LoroDoc, UndoManager } from "loro-crdt";
-import { Conection } from "./protocol/conection";
+import { Conection, State } from "./protocol/conection";
+
+document.addEventListener("guitite:status-changed", e => {
+  document.querySelector("#st")!.textContent = e.detail.status;
+});
 
 const doc = new LoroDoc();
 const ephemeral = new EphemeralStore();

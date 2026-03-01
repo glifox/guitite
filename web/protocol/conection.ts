@@ -2,7 +2,14 @@ import { EphemeralStore, LoroDoc } from "loro-crdt";
 import { Action, Combination, Message, MessageType } from "./types";
 import { ephimeral_protocol as ephemeral_protocol, protocol } from "./protocol";
 
+export enum State {
+  Disconnected = 'disconnected',
+  Retrying = 'retrying',
+  Connected = 'connected',
+}
+
 export class Conection {
+  private _state: State = State.Disconnected;
   private doc: LoroDoc;
   private ephimeral: EphemeralStore | null = null;
   private ws: WebSocket | null = null;
@@ -27,6 +34,8 @@ export class Conection {
     this.url = url;
     if (ephimeral) this.ephimeral = ephimeral;
     this.protocols = protocols;
+    
+    this.changeStatus(State.Disconnected);
   }
 
   private connect() {
@@ -50,6 +59,7 @@ export class Conection {
   }
 
   private onopen(ev: Event) {
+    this.changeStatus(State.Connected);
     this.retries = 0;
     
     const version = this.doc.oplogVersion().encode();
@@ -90,18 +100,23 @@ export class Conection {
       case 1002:
       case 1003:
       case 1006:
+        this.changeStatus(State.Retrying);
+        this.tryopen = true;
         this.retry();
         break;
       case 3000:
+        this.changeStatus(State.Disconnected);
         this.tryopen = false;
         break;
       default:
+        this.changeStatus(State.Disconnected);
         this.tryopen = false;
         console.warn(`[Connection closed] Code: ${ev.code}, Reason: ${ev.reason}`);
     } 
   }
   private onerror(ev: Event) {
     console.error("error: ", ev);
+    this.changeStatus(State.Disconnected);
     this.ws = null;
   }
 
@@ -155,6 +170,7 @@ export class Conection {
   }
   
   close() {
+    this.changeStatus(State.Disconnected);
     this.tryopen = false;
     if (this.unsubscribe) {
       this.unsubscribe();
@@ -174,4 +190,12 @@ export class Conection {
     
     this.ws = null;
   }
+  
+  changeStatus(status: State) {
+    this._state = status;
+    const event = new CustomEvent('guitite:status-changed', { detail: { status } });
+    document.dispatchEvent(event);
+  }
+  
+  get state(): State { return this._state }
 }
