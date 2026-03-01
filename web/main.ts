@@ -5,7 +5,7 @@ import { EphemeralStore, LoroDoc, UndoManager } from "loro-crdt";
 import { Conection, State } from "./protocol/conection";
 
 document.addEventListener("guitite:status-changed", e => {
-  document.querySelector("#st")!.textContent = e.detail.status;
+  document.querySelector("#st")!.textContent = (e as CustomEvent).detail.status;
 });
 
 const doc = new LoroDoc();
