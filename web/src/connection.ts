@@ -52,20 +52,26 @@ export class Connection {
     this.changeStatus(State.Connected);
     this.retries = 0;
     
-    const version = this.doc.oplogVersion().encode();
-    const message = new Message(MessageType.VersionVector, Action.Answer, version);
-    
-    this.unsubscribe = this.doc.subscribeLocalUpdates(
-      (m) => this.send(new Message(MessageType.Export, Action.Replicate, m))
-    )
-    this.send(message);
+    this.unsubscribe = this.doc.subscribeLocalUpdates(this.updates)
     
     if (this.ephimeral) {
-      this.eunsubscribe = this.ephimeral?.subscribeLocalUpdates(
-        (u) => { this.send(new Message(MessageType.Ephimeral, Action.Passthrough, u)) }
-      )
+      this.eunsubscribe = this.ephimeral?.subscribeLocalUpdates(this.ephUpdates)
+    }
+    
+    const version = this.doc.oplogVersion().encode();
+    const message = new Message(MessageType.VersionVector, Action.Answer, version);
+    this.send(message);
+    if (this.ephimeral) {
       this.send(new Message(MessageType.Ephimeral, Action.Passthrough, new Uint8Array()))
     }
+  }
+  
+  private updates(content: Uint8Array) {
+    this.send(new Message(MessageType.Export, Action.Replicate, content))
+  }
+  
+  private ephUpdates(content: Uint8Array) {
+    this.send(new Message(MessageType.Ephimeral, Action.Passthrough, content))
   }
 
   private async onmessage(ev: MessageEvent) {
