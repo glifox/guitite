@@ -15,7 +15,7 @@ export class Conection {
   private ws: WebSocket | null = null;
   
   private retries: number = 0;
-  private retryInterval: number = 3000;
+  private retryInterval: number = 1000;
   private maxRetries: number = Infinity;
   private url: string | URL;
   private protocols: string | string[] | undefined;
