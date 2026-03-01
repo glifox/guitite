@@ -23,6 +23,7 @@
   "scripts": {
     "build": "rm -fr dist && rolldown -c",
     "build:prod": "rm -fr dist && NODE_ENV=production rolldown -c",
+    "prepublishOnly": "pnpm run build:prod",
     "dev": "rolldown -wc"
   },
   "dependencies": {
