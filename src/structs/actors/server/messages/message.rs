@@ -29,6 +29,7 @@ where
             ( Action::Answer | Action::None, _) => file.message.do_send(msg),
             ( Action::Passthrough, _ ) => {
                 clients.iter().for_each(|c| { 
+                    if c == &msg.id { return; }
                     self.send(c, message!(copy msg, act Action::None)) 
                 });
             }
