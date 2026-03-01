@@ -16,6 +16,7 @@ const DURATIONS: Durations = Durations {
     timeout: Duration::from_secs(10)
 };
 
+/// The struct that controls the conection with the client
 pub struct Client {
     pub(super) id: u64,
     pub(super) last_hb: Instant,
@@ -24,6 +25,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// Generates a new client connected to a [`Server`]
     pub fn new<T: Into<String>>(file: T, server: Addr<Server>) -> Self {
         Self { 
             id: rand::rng().random(), 

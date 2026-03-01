@@ -1,25 +1,25 @@
 import { EphemeralStore, LoroDoc } from "loro-crdt";
-import { Action, Combination, Message, MessageType } from "./types";
-import { ephimeral_protocol as ephemeral_protocol, protocol } from "./protocol";
+import { Action, type Combination, Message, MessageType } from "./types";
+import { ephemeral_protocol, protocol } from "./protocol";
 
 export enum State {
   Disconnected = 'disconnected',
   Retrying = 'retrying',
   Connected = 'connected',
+  Connecting = 'connecting',
 }
 
-export class Conection {
+export class Connection {
   private _state: State = State.Disconnected;
   private doc: LoroDoc;
   private ephimeral: EphemeralStore | null = null;
   private ws: WebSocket | null = null;
   
   private retries: number = 0;
-  private retryInterval: number = 1000;
+  private retryInterval: number = 100;
   private maxRetries: number = Infinity;
   private url: string | URL;
   private protocols: string | string[] | undefined;
-  private tryopen: boolean = true;
   
   private unsubscribe: (() => void) | null = null;
   private eunsubscribe: (() => void) | null = null;
@@ -40,22 +40,12 @@ export class Conection {
 
   private connect() {
     this.ws = new WebSocket(this.url, this.protocols);
-    this.tryopen = false;
+    this.changeStatus(State.Connecting);
 
     this.ws.onopen = this.onopen.bind(this);
     this.ws.onmessage = this.onmessage.bind(this);
     this.ws.onerror = this.onerror.bind(this);
     this.ws.onclose = this.onclose.bind(this);
-    
-    this.unsubscribe = this.doc.subscribeLocalUpdates(
-      (m) => this.send(new Message(MessageType.Export, Action.Replicate, m))
-    )
-    
-    if (this.ephimeral) {
-      this.eunsubscribe = this.ephimeral?.subscribeLocalUpdates(
-        (u) => { this.send(new Message(MessageType.Ephimeral, Action.Passthrough, u)) }
-      )
-    }
   }
 
   private onopen(ev: Event) {
@@ -65,8 +55,15 @@ export class Conection {
     const version = this.doc.oplogVersion().encode();
     const message = new Message(MessageType.VersionVector, Action.Answer, version);
     
+    this.unsubscribe = this.doc.subscribeLocalUpdates(
+      (m) => this.send(new Message(MessageType.Export, Action.Replicate, m))
+    )
     this.send(message);
+    
     if (this.ephimeral) {
+      this.eunsubscribe = this.ephimeral?.subscribeLocalUpdates(
+        (u) => { this.send(new Message(MessageType.Ephimeral, Action.Passthrough, u)) }
+      )
       this.send(new Message(MessageType.Ephimeral, Action.Passthrough, new Uint8Array()))
     }
   }
@@ -83,6 +80,7 @@ export class Conection {
   }
 
   private onclose(ev: CloseEvent) {
+    if (this._state == State.Disconnected) return;
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
@@ -101,27 +99,26 @@ export class Conection {
       case 1003:
       case 1006:
         this.changeStatus(State.Retrying);
-        this.tryopen = true;
         this.retry();
         break;
       case 3000:
         this.changeStatus(State.Disconnected);
-        this.tryopen = false;
         break;
       default:
         this.changeStatus(State.Disconnected);
-        this.tryopen = false;
         console.warn(`[Connection closed] Code: ${ev.code}, Reason: ${ev.reason}`);
     } 
   }
   private onerror(ev: Event) {
     console.error("error: ", ev);
-    this.changeStatus(State.Disconnected);
+    if (this._state == State.Connecting)
+      this.changeStatus(State.Retrying);
+    else this.changeStatus(State.Disconnected);
     this.ws = null;
   }
 
   private retry() {
-    if (!this.tryopen) return;
+    if (this._state != State.Retrying) return;
     if (this.retries >= this.maxRetries) {
       console.error("Max retries reached. Giving up.");
       return;
@@ -129,7 +126,9 @@ export class Conection {
     this.retries++;
     console.warn(`Retrying connection in ${this.retryInterval}ms... (Attempt ${this.retries}/${this.maxRetries})`);
 
-    setTimeout( () => { if (this.tryopen) this.connect(); }, this.retryInterval);
+    setTimeout(() => {
+      if (this._state === State.Retrying) this.connect();
+    }, this.retryInterval);
   }
   
   private send(message: Message) {
@@ -165,13 +164,12 @@ export class Conection {
   }
   
   tryconnect() {
-    this.tryopen = true;
+    this.changeStatus(State.Retrying);
     this.connect();
   }
   
   close() {
     this.changeStatus(State.Disconnected);
-    this.tryopen = false;
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;

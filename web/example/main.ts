@@ -2,7 +2,7 @@ import { EditorState } from "@codemirror/state";
 import { dropCursor, EditorView } from "@codemirror/view";
 import { LoroExtensions } from "loro-codemirror";
 import { EphemeralStore, LoroDoc, UndoManager } from "loro-crdt";
-import { Conection, State } from "./protocol/conection";
+import { Connection, State } from "@glifox/guitite";
 
 document.addEventListener("guitite:status-changed", e => {
   document.querySelector("#st")!.textContent = (e as CustomEvent).detail.status;
@@ -10,10 +10,10 @@ document.addEventListener("guitite:status-changed", e => {
 
 const doc = new LoroDoc();
 const ephemeral = new EphemeralStore();
-const con = new Conection("ws://localhost:8080/ws/some", doc, ephemeral);
+const con = new Connection("ws://localhost:8080/ws/some", doc, ephemeral);
 
-document.querySelector("#cn")!.addEventListener('click', () => con.tryconnect());
-document.querySelector("#dc")!.addEventListener('click', () => con.close());
+document.querySelector("#cn")!.addEventListener('click', () => {console.info("cn:");con.tryconnect()});
+document.querySelector("#dc")!.addEventListener('click', () => {console.info("ds:");con.close()});
 
 const undoManager = new UndoManager(doc, {});
 

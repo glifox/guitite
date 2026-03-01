@@ -8,6 +8,8 @@ use crate::structs::actors::relay::Relay;
 use crate::structs::messages::{Connect, Disconnect, Error, Message, Response};
 use crate::structs::internal::{Action, File};
 
+
+/// A struct that mannage all the connections and client actors
 pub struct Server<A = Relay>
 where 
     A: Actor<Context = actix::Context<A>>,
@@ -19,8 +21,11 @@ where
     A::Context: ToEnvelope<A, Message>,
     A::Context: ToEnvelope<A, Disconnect>
 {
+    /// The document actor factory.
     pub(in super) actor: fn(String, Recipient<Response>) -> A,
+    /// A list of the opened files.
     pub(in super) files: HashMap<File, HashSet<u64>>,
+    /// A list of the clients conected.
     pub(in super) clients: HashMap<u64, (Recipient<Message>, Recipient<Error>)>,
 }
 
@@ -38,9 +43,9 @@ where
 { type Context = Context<Self>; }
 
 impl Server {
-    #[allow(unused)]
     fn none(name: String, server: Recipient<Response>) -> Relay { Relay::new(name, server) }
     
+    /// Returns a server with the default document actor [`Relay`] 
     pub fn new() -> Server {
         Server { 
             actor: Self::none, 
@@ -61,6 +66,7 @@ where
     A::Context: ToEnvelope<A, Message>,
     A::Context: ToEnvelope<A, Disconnect>,
 {
+    /// Generates a Server with a factory for a custom document actor.
     pub fn new_with_actor(actor: fn(String, Recipient<Response>) -> A) -> Self
     {
         Self {
@@ -109,5 +115,4 @@ where
             }
         );
     }
-    
 }

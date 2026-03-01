@@ -47,7 +47,29 @@ fn implementation(tree: DeriveInput, skips: Skips) -> TokenStream {
     }.into()
 }
 
-
+/// A derive macro to implement the default impl 
+/// for the Actors Handlers to avoid rewrite
+/// every time the basic internal logic on a new document actor
+/// 
+/// ### Example
+/// 
+/// to recreate the default document actor (Relay)
+/// the implementation looks like:
+/// 
+/// ~~~ignore
+/// #[derive(Protocol, DocumentActor)]
+/// pub struct Relay {
+///     pub name: String,
+///     pub(in self) doc: LoroDoc,
+///     pub(in self) server: Recipient<Response>
+/// }
+/// ~~~
+/// 
+/// You can also skip some handler implementations, simply by addind some arguments into 
+/// the #[document_actor(...)] Currently it suports ["skip_connect", "skip_message", "skip_disconnect"]
+/// 
+/// ### Example 
+/// `#[document_actor(skip_disconnect)]`
 #[proc_macro_derive(DocumentActor, attributes(document_actor))]
 #[proc_macro_error]
 pub fn document_actor(input: TokenStream) -> TokenStream {
@@ -58,6 +80,7 @@ pub fn document_actor(input: TokenStream) -> TokenStream {
     implementation(tree, skips)
 }
 
+/// A derive macro to impl the Protocol trait.
 #[proc_macro_derive(Protocol)]
 #[proc_macro_error]
 pub fn protocol(input: TokenStream) -> TokenStream {

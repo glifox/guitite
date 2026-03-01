@@ -1,12 +1,10 @@
 
-use actix::{Actor, Addr, Recipient};
+use actix::{Actor, Addr};
 use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, get, web};
 use actix_web_actors::ws;
-use guitite::{Client, DocumentActor, Protocol, Server};
-use guitite::messages::Response;
+use guitite::{Client, Server};
 
 use env_logger;
-
 
 #[get("/ws/{file_name}")]
 async fn client(
@@ -37,19 +35,3 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-
-
-#[derive(DocumentActor, Protocol)]
-// #[document_actor(skip_message)]
-struct Yes {
-    doc: loro::LoroDoc,
-    server: Recipient<Response>
-}
-
-// impl Handler<Message> for Yes {
-//     type Result = ();
-
-//     fn handle(&mut self, msg: Message, ctx: &mut Self::Context) -> Self::Result {
-//         todo!()
-//     }
-// }

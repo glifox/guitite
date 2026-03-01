@@ -1,5 +1,5 @@
 import { LoroDoc, VersionVector, EphemeralStore } from "loro-crdt";
-import { Action, Combination, Message, MessageType } from "./types";
+import { Action, type Combination, Message, MessageType } from "./types";
 
 
 export const protocol: { [key in Combination]?: (doc: LoroDoc, content: Uint8Array) => Message | void } = {
@@ -27,7 +27,7 @@ export const protocol: { [key in Combination]?: (doc: LoroDoc, content: Uint8Arr
   // [`${MessageType.Export}-${Action.Replicate}`]: (doc, content) => {  },
 }
 
-export const ephimeral_protocol: { [key in Combination]?: (store: EphemeralStore, content: Uint8Array) => Message | void } = {
+export const ephemeral_protocol: { [key in Combination]?: (store: EphemeralStore, content: Uint8Array) => Message | void } = {
   [`${MessageType.Ephimeral}-${Action.None}`]: (store, content) => { 
     if (content.length == 0) { return new Message(MessageType.Ephimeral, Action.Replicate, store.encodeAll()) }
     store.apply(content);

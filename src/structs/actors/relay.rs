@@ -19,7 +19,6 @@ pub struct Relay {
 
 impl Relay {
     pub(crate) fn new(name: String, server: Recipient<Response>) -> Self {
-        log::debug!("Creating new");
         Self { name, doc: LoroDoc::new(), server}
     }
 }
