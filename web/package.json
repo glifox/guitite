@@ -22,6 +22,7 @@
   ],
   "scripts": {
     "build": "rm -fr dist && rolldown -c",
+    "build:prod": "rm -fr dist && NODE_ENV=production rolldown -c",
     "dev": "rolldown -wc"
   },
   "dependencies": {
