@@ -18,7 +18,8 @@
   "files": [
     "dist",
     "package.json",
-    "README.md"
+    "README.md",
+    "LICENCE"
   ],
   "scripts": {
     "build": "rm -fr dist && rolldown -c",
