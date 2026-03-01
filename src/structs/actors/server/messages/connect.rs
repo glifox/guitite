@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use actix::{AsyncContext, Recipient};
 use actix::prelude::{Actor, Handler};
 use actix::dev::ToEnvelope;
+use log::info;
 
 use super::super::Server;
 
@@ -48,6 +49,7 @@ where
         };
         
         let (f, _) = self.files.get_key_value(&msg.file).expect("unexpected behaviour");
+        info!("connected: {}", &msg.id);
         f.connect.do_send(msg);
     }
 }

@@ -28,6 +28,7 @@ pub trait Protocol {
                 let msg = status.pending.map(|_| { self.version_vector(doc, message) });
                 Ok(msg)
             }
+            (MessageType::Ephimeral(_), Action::None) => Ok(None),
             (a, m) => Err(errors!( un_implemented a => m ))
         }
     }

@@ -72,14 +72,14 @@ where
     
     pub(super) fn send(&self, id: &u64, message: Message) {
         match self.clients.get(id) {
-            Some((resipient, _)) => resipient.do_send(message.clone()),
+            Some((resipient, _)) => resipient.do_send(message),
             None => (),
         }
     }
     
     pub(super) fn send_err(&self, id: &u64, err: Error) {
         match self.clients.get(id) {
-            Some((_, resipient)) => resipient.do_send(err.clone()),
+            Some((_, resipient)) => resipient.do_send(err),
             None => (),
         }
     }
