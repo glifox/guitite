@@ -52,10 +52,10 @@ export class Connection {
     this.changeStatus(State.Connected);
     this.retries = 0;
     
-    this.unsubscribe = this.doc.subscribeLocalUpdates(this.updates)
+    this.unsubscribe = this.doc.subscribeLocalUpdates((c) => this.updates(c))
     
     if (this.ephimeral) {
-      this.eunsubscribe = this.ephimeral?.subscribeLocalUpdates(this.ephUpdates)
+      this.eunsubscribe = this.ephimeral?.subscribeLocalUpdates(c => this.ephUpdates(c))
     }
     
     const version = this.doc.oplogVersion().encode();

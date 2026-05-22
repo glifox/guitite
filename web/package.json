@@ -2,7 +2,7 @@
   "name": "@glifox/guitite",
   "private": false,
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "feraxhp",
   "license": "MIT",
   "main": "dist/guitite.js",
