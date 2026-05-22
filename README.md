@@ -24,7 +24,7 @@ The Server exposes 2 methods to _instanciate_ the server
 1. new: will create the simplest _server_. it contains a simple relay to demostrate sincronization with no persistance
 2. new_with_actor: this one allows to create a _custom actor_ that implements the Protocol, Actor, and the Handlers for _Connect_, _Message_, _Disconnect_.
 
-## Example
+### Example
 
 Create a simple relay server
 ~~~rust
