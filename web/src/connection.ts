@@ -110,10 +110,10 @@ export class Connection {
         this.retry();
         break;
       case 3000:
-        this.changeStatus(State.Disconnected);
+        this.changeStatus(State.Disconnected, { code: ev.code, reason: ev.reason });
         break;
       default:
-        this.changeStatus(State.Disconnected);
+        this.changeStatus(State.Disconnected, { code: ev.code, reason: ev.reason });
         console.warn(`[Connection closed] Code: ${ev.code}, Reason: ${ev.reason}`);
     } 
   }
@@ -121,7 +121,7 @@ export class Connection {
     console.error("error: ", ev);
     if (this._state == State.Connecting)
       this.changeStatus(State.Retrying);
-    else this.changeStatus(State.Disconnected);
+    else this.changeStatus(State.Disconnected, { code: 0, reason: "error" });
     this.ws = null;
   }
 
@@ -177,7 +177,7 @@ export class Connection {
   }
   
   close() {
-    this.changeStatus(State.Disconnected);
+    this.changeStatus(State.Disconnected, { code: 0, reason: "Self killed" });
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
@@ -197,9 +197,9 @@ export class Connection {
     this.ws = null;
   }
   
-  changeStatus(status: State) {
+  changeStatus(status: State, context: { code: number, reason: string } | null = null) {
     this._state = status;
-    const event = new CustomEvent('guitite:status-changed', { detail: { status } });
+    const event = new CustomEvent('guitite:status-changed', { detail: { status, context } });
     document.dispatchEvent(event);
   }
   
