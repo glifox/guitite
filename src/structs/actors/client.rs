@@ -1,11 +1,12 @@
 use std::time::{Duration, Instant};
-use actix::dev::ContextFutureSpawner;
+use actix::dev::{ContextFutureSpawner, ToEnvelope};
 use actix_web_actors::ws::{WebsocketContext, ProtocolError, Message as WsMessage};
 use actix::{Actor, ActorContext, ActorFutureExt, Addr, AsyncContext, Handler, Running, StreamHandler, WrapFuture};
 use actix_ws::CloseReason;
 use rand::Rng as _;
 
 use super::super::parser::Parse;
+use crate::Protocol;
 use crate::structs::actors::server::Server;
 use crate::structs::messages::{Connect, Disconnect, Error, Message};
 
@@ -17,16 +18,36 @@ const DURATIONS: Durations = Durations {
 };
 
 /// The struct that controls the conection with the client
-pub struct Client {
+pub struct Client<A>
+where 
+    A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
+    A: Handler<Connect>,
+    A: Handler<Message>,
+    A: Handler<Disconnect>,
+    A::Context: ToEnvelope<A, Connect>,
+    A::Context: ToEnvelope<A, Message>,
+    A::Context: ToEnvelope<A, Disconnect> 
+{
     pub(super) id: u64,
     pub(super) last_hb: Instant,
     pub(super) file_name: String,
-    pub(super) server: Addr<Server>,
+    pub(super) server: Addr<Server<A>>,
 }
 
-impl Client {
+impl<A> Client<A>
+where 
+    A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
+    A: Handler<Connect>,
+    A: Handler<Message>,
+    A: Handler<Disconnect>,
+    A::Context: ToEnvelope<A, Connect>,
+    A::Context: ToEnvelope<A, Message>,
+    A::Context: ToEnvelope<A, Disconnect> 
+{
     /// Generates a new client connected to a [`Server`]
-    pub fn new<T: Into<String>>(file: T, server: Addr<Server>) -> Self {
+    pub fn new<T: Into<String>>(file: T, server: Addr<Server<A>>) -> Self {
         Self { 
             id: rand::rng().random(), 
             last_hb: Instant::now(),
@@ -35,7 +56,7 @@ impl Client {
         }
     }
     
-    fn pinging(&self, ctx: &mut WebsocketContext<Self>) {
+    fn pinging(&self, ctx: &mut WebsocketContext<Client<A>>) {
         ctx.run_interval(DURATIONS.heardbeat, | client, ctx| {
             if Instant::now().duration_since(client.last_hb) > DURATIONS.timeout {
                 client.server.do_send(
@@ -53,8 +74,18 @@ impl Client {
     }
 }
 
-impl Actor for Client { 
-    type Context = WebsocketContext<Self>;
+impl<A> Actor for Client<A>
+where 
+    A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
+    A: Handler<Connect>,
+    A: Handler<Message>,
+    A: Handler<Disconnect>,
+    A::Context: ToEnvelope<A, Connect>,
+    A::Context: ToEnvelope<A, Message>,
+    A::Context: ToEnvelope<A, Disconnect> 
+{ 
+    type Context = WebsocketContext<Client<A>>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
         self.pinging(ctx);
@@ -87,7 +118,17 @@ impl Actor for Client {
 }
 
 /// WebSocket message handler
-impl StreamHandler<Result<WsMessage, ProtocolError>> for Client {
+impl<A> StreamHandler<Result<WsMessage, ProtocolError>> for Client<A>
+where 
+    A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
+    A: Handler<Connect>,
+    A: Handler<Message>,
+    A: Handler<Disconnect>,
+    A::Context: ToEnvelope<A, Connect>,
+    A::Context: ToEnvelope<A, Message>,
+    A::Context: ToEnvelope<A, Disconnect> 
+{
     fn handle(&mut self, msg: Result<WsMessage, ProtocolError>, ctx: &mut Self::Context) {
         
         let msg = match msg {
@@ -134,7 +175,17 @@ impl StreamHandler<Result<WsMessage, ProtocolError>> for Client {
     }
 }
 
-impl Handler<Message> for Client {
+impl<A> Handler<Message> for Client<A>
+where 
+    A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
+    A: Handler<Connect>,
+    A: Handler<Message>,
+    A: Handler<Disconnect>,
+    A::Context: ToEnvelope<A, Connect>,
+    A::Context: ToEnvelope<A, Message>,
+    A::Context: ToEnvelope<A, Disconnect> 
+{
     type Result = ();
 
     fn handle(&mut self, msg: Message, ctx: &mut Self::Context) -> Self::Result {
@@ -143,7 +194,17 @@ impl Handler<Message> for Client {
     }
 }
 
-impl Handler<Error> for Client {
+impl<A> Handler<Error> for Client<A>
+where 
+    A: Actor<Context = actix::Context<A>>,
+    A: Protocol,
+    A: Handler<Connect>,
+    A: Handler<Message>,
+    A: Handler<Disconnect>,
+    A::Context: ToEnvelope<A, Connect>,
+    A::Context: ToEnvelope<A, Message>,
+    A::Context: ToEnvelope<A, Disconnect> 
+{
     type Result = ();
 
     fn handle(&mut self, msg: Error, ctx: &mut Self::Context) -> Self::Result {
