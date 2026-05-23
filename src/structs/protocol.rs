@@ -26,8 +26,8 @@ pub trait Protocol {
                 Ok(Some(message!(copy message, MessageType::Export(update), Action::None)))
             }
             (MessageType::Export(bytes), Action::None) => {
-                self.on_import(bytes);
                 let status = doc.import(bytes).map_err(|e| e.to_error())?;
+                self.on_import(bytes);
                 let msg = status.pending.map(|_| { self.version_vector(doc, message) });
                 Ok(msg)
             }
