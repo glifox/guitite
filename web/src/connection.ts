@@ -26,14 +26,16 @@ export class Connection {
 
   constructor(
     url: string | URL,
-    doc: LoroDoc,
-    ephimeral?: EphemeralStore,
-    protocols?: string | string[] | undefined,
+    config: {
+      doc: LoroDoc,
+      ephimeral?: EphemeralStore,
+      protocols?: string | string[] | undefined,
+    }
   ) {
-    this.doc = doc;
     this.url = url;
-    if (ephimeral) this.ephimeral = ephimeral;
-    this.protocols = protocols;
+    this.doc = config.doc;
+    if (config.ephimeral) this.ephimeral = config.ephimeral;
+    this.protocols = config.protocols;
     
     this.changeStatus(State.Disconnected);
   }
